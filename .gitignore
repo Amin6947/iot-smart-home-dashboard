@@ -5,6 +5,8 @@ venv/
 .venv/
 backend/smart_home.db
 backend/*.log
+frontend/*.log
+firmware/*.log
 .env
 .env.local
 
