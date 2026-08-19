@@ -199,6 +199,10 @@
       <a href="#step3"><span class="pin">03</span>Frontend React</a>
       <a href="#step4"><span class="pin">04</span>ESP32 MicroPython</a>
       <a href="#step5"><span class="pin">05</span>ทดสอบ + รันเต็ม</a>
+      <a href="#step6"><span class="pin">06</span>ขึ้น GitHub</a>
+      <a href="#step7"><span class="pin">07</span>Deploy Backend</a>
+      <a href="#step8"><span class="pin">08</span>Deploy Frontend</a>
+      <a href="#step9"><span class="pin">09</span>เชื่อม 2 ฝั่ง</a>
     </div>
   </nav>
 
@@ -702,6 +706,159 @@ main()</pre></div></div>
           </tbody>
         </table>
       </div>
+    </section>
+
+    <!-- ============ STEP 6 ============ -->
+    <section class="step" id="step6">
+      <div class="step__head"><span class="step__num">06</span><h2>ส่งโค้ดขึ้น GitHub</h2></div>
+      <p class="step__sub">GitHub คือ "ที่เก็บโค้ดออนไลน์" — ขั้นตอนนี้จำเป็นก่อน deploy เพราะ Render กับ Vercel ดึงโค้ดจาก GitHub ไปรันอัตโนมัติทุกครั้งที่คุณแก้ไข</p>
+
+      <div class="why">
+        <b>ทำไมต้องมี GitHub ก่อน</b>
+        <p>Render/Vercel ไม่ได้รับไฟล์จากเครื่องคุณโดยตรง — มันจะไป "ดึง" (pull) โค้ดจาก repository บน GitHub แทน วิธีนี้ทำให้ทุกครั้งที่คุณแก้โค้ดแล้ว push ขึ้น GitHub เว็บจะอัพเดทให้อัตโนมัติ ไม่ต้องอัพโหลดเองทีละไฟล์</p>
+      </div>
+
+      <div class="tip"><b>โปรเจกต์นี้ทำขั้นตอนนี้ให้เรียบร้อยแล้ว</b>อยู่ที่ <span class="mono">github.com/Amin6947/iot-smart-home-dashboard</span> (ตั้งเป็น Public แล้ว) — อ่านหัวข้อนี้ไว้เผื่อทำโปรเจกต์อื่นในอนาคต หรือย้อนมาเช็คขั้นตอนได้</div>
+
+      <h3 class="sub">6.1 สมัครบัญชี GitHub (ถ้ายังไม่มี)</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เปิดเบราว์เซอร์ไปที่ <span class="where">github.com</span> → คลิกปุ่ม <b>Sign up</b> มุมขวาบน</div></div>
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">กรอกอีเมล ตั้งรหัสผ่าน ตั้งชื่อผู้ใช้ (username) → ทำตามขั้นตอนยืนยันตัวตนจนเสร็จ</div></div>
+      </div>
+
+      <h3 class="sub">6.2 สร้าง Repository ใหม่</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกไอคอน <b>+</b> มุมขวาบนของหน้า GitHub → เลือก <span class="where">New repository</span></div></div>
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">ตั้งชื่อ เช่น <span class="where">iot-smart-home-dashboard</span> → เลือก <b>Private</b> (แนะนำ ถ้ายังไม่พร้อมให้คนอื่นเห็น)</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกปุ่มเขียว <b>Create repository</b> ด้านล่าง</div></div>
+      </div>
+
+      <h3 class="sub">6.3 เชื่อมโค้ดในเครื่องคุณขึ้น GitHub</h3>
+      <p>หน้าที่เปิดขึ้นมาหลังสร้าง repo จะมีคำสั่งให้คัดลอก หน้าตาประมาณนี้ (แทน URL ด้วยของคุณเอง):</p>
+      <div class="term">
+        <div class="term__bar"><span class="term__title">PowerShell — ในโฟลเดอร์โปรเจกต์</span><div class="term__ctrl"><span></span><span></span><span></span></div></div>
+        <div class="term__body"><pre><span class="prompt">PS ...\A03&gt;</span> git init
+<span class="prompt">PS ...\A03&gt;</span> git add -A
+<span class="prompt">PS ...\A03&gt;</span> git commit -m "Initial commit"
+<span class="prompt">PS ...\A03&gt;</span> git remote add origin https://github.com/YOUR_USERNAME/iot-smart-home-dashboard.git
+<span class="prompt">PS ...\A03&gt;</span> git push -u origin master</pre></div>
+      </div>
+      <div class="tip"><b>ทางลัด</b>ถ้าติดตั้ง <span class="mono">GitHub CLI</span> (โปรแกรม <span class="mono">gh</span>) และล็อกอินไว้แล้ว ใช้คำสั่งเดียวจบ: <span class="mono">gh repo create iot-smart-home-dashboard --private --source=. --push</span> — สร้าง repo และส่งโค้ดขึ้นให้พร้อมกันเลย (วิธีที่ใช้ทำโปรเจกต์นี้)</div>
+    </section>
+
+    <!-- ============ STEP 7 ============ -->
+    <section class="step" id="step7">
+      <div class="step__head"><span class="step__num">07</span><h2>Deploy Backend ขึ้น Render.com</h2></div>
+      <p class="step__sub">เอา FastAPI + ฐานข้อมูลไปรันบนเซิร์ฟเวอร์จริง ให้เข้าถึงได้จากอินเทอร์เน็ตตลอด 24 ชั่วโมง</p>
+
+      <div class="why">
+        <b>ทำไม Render</b>
+        <p>มี free tier ที่รองรับทั้งเว็บเซิร์ฟเวอร์ (Python) และฐานข้อมูล Postgres ในที่เดียว และอ่านไฟล์ <span class="mono">render.yaml</span> ที่เตรียมไว้ในโปรเจกต์แล้วสร้างทุกอย่างให้อัตโนมัติ ไม่ต้องตั้งค่าเองทีละขั้น</p>
+      </div>
+
+      <h3 class="sub">7.1 สมัครและเชื่อมกับ GitHub</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เปิด <span class="where">render.com</span> → คลิก <b>Get Started</b> → เลือก <span class="where">Sign up with GitHub</span></div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">หน้า GitHub จะถามขออนุญาต → คลิก <b>Authorize Render</b></div></div>
+      </div>
+
+      <h3 class="sub">7.2 สร้าง Blueprint จากไฟล์ render.yaml</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">ในหน้า Dashboard คลิกปุ่ม <b>New +</b> มุมขวาบน → เลือก <span class="where">Blueprint</span></div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เลือก repository <span class="where">iot-smart-home-dashboard</span> จากรายการ → คลิก <b>Connect</b></div></div>
+        <div class="action"><div class="action__icon">👀</div><div class="action__text">Render จะอ่านไฟล์ <span class="mono">render.yaml</span> แล้วโชว์รายการที่จะสร้าง: 1 web service + 1 database — ตรงตามที่เตรียมไว้</div></div>
+      </div>
+
+      <h3 class="sub">7.3 ตั้งค่ารหัสผ่านก่อนกด Deploy</h3>
+      <div class="warn"><b>สำคัญมาก</b>ต้องตั้งค่านี้เองก่อนกด Apply ไม่งั้นใครก็เดารหัสผ่าน default ได้</div>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">หาช่อง <span class="where">ADMIN_PASSWORD</span> ที่ขึ้นเตือนให้กรอก → พิมพ์รหัสผ่านที่คาดเดายาก (อย่างน้อย 12 ตัวอักษร)</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">ช่อง <span class="where">FRONTEND_ORIGIN</span> ใส่ค่าไปก่อนชั่วคราว เช่น <span class="mono">https://placeholder.com</span> (จะย้อนมาแก้ในขั้นที่ 09)</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกปุ่ม <b>Apply</b> → รอประมาณ 3-5 นาที ให้ระบบสร้างเซิร์ฟเวอร์และฐานข้อมูลเสร็จ</div></div>
+      </div>
+
+      <h3 class="sub">7.4 คัดลอก URL ของ Backend</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกที่ service ชื่อ <span class="where">smart-home-backend</span> ในหน้า Dashboard</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คัดลอก URL ที่แสดงด้านบน (หน้าตาแบบ <span class="mono">https://smart-home-backend-xxxx.onrender.com</span>) — เก็บไว้ใช้ขั้นถัดไป</div></div>
+      </div>
+      <div class="tip"><b>ทดสอบ</b>เปิด URL นั้น + <span class="mono">/docs</span> ในเบราว์เซอร์ (เช่น .../docs) ถ้าเห็นหน้าเอกสาร API สีเขียว ๆ แปลว่า backend รันสำเร็จแล้ว</div>
+    </section>
+
+    <!-- ============ STEP 8 ============ -->
+    <section class="step" id="step8">
+      <div class="step__head"><span class="step__num">08</span><h2>Deploy Frontend ขึ้น Vercel.com</h2></div>
+      <p class="step__sub">เอาหน้าเว็บ Dashboard ไปวางบน Vercel ให้คนเข้าผ่านลิงก์ได้จริง</p>
+
+      <div class="why">
+        <b>ทำไม Vercel</b>
+        <p>เชี่ยวชาญเรื่องเว็บฝั่ง frontend โดยเฉพาะ (React/Vite) โหลดเร็วเพราะกระจายไฟล์ไปเซิร์ฟเวอร์ทั่วโลก (CDN) และมี free tier ที่เพียงพอสำหรับ dashboard ส่วนตัว</p>
+      </div>
+
+      <h3 class="sub">8.1 สมัครและ Import โปรเจกต์</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เปิด <span class="where">vercel.com</span> → คลิก <b>Sign Up</b> → เลือก <span class="where">Continue with GitHub</span> → คลิก <b>Authorize</b></div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิก <b>Add New...</b> มุมขวาบน → เลือก <span class="where">Project</span></div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">หา repository <span class="where">iot-smart-home-dashboard</span> ในรายการ → คลิก <b>Import</b></div></div>
+      </div>
+
+      <h3 class="sub">8.2 ตั้งค่า Root Directory (สำคัญ!)</h3>
+      <div class="warn"><b>ห้ามลืมขั้นนี้</b>โปรเจกต์เก็บ backend/frontend/firmware ไว้ในโฟลเดอร์เดียวกัน ต้องบอก Vercel ว่าโค้ดเว็บอยู่ในโฟลเดอร์ <span class="mono">frontend</span> เท่านั้น</div>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">ในหน้า Configure Project หาหัวข้อ <span class="where">Root Directory</span> → คลิก <b>Edit</b></div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เลือกโฟลเดอร์ <span class="where">frontend</span> จากรายการ → คลิก <b>Continue</b></div></div>
+      </div>
+
+      <h3 class="sub">8.3 ใส่ URL ของ Backend</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกเปิดหัวข้อ <span class="where">Environment Variables</span></div></div>
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">ช่อง Name พิมพ์ <span class="where">VITE_API_URL</span> ช่อง Value วาง URL ของ Render จากขั้นที่ 07.4 (ไม่ต้องมี <span class="mono">/api</span> ต่อท้าย)</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิก <b>Add</b> เพื่อเพิ่มค่านี้เข้าไป</div></div>
+      </div>
+
+      <h3 class="sub">8.4 Deploy</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกปุ่มดำ <b>Deploy</b> ด้านล่าง → รอประมาณ 1-2 นาที</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เมื่อเสร็จจะเห็นภาพหน้าเว็บ + คอนเฟตตี้ 🎉 → คลิก <b>Continue to Dashboard</b> แล้วคัดลอก URL (เช่น <span class="mono">https://iot-smart-home-dashboard.vercel.app</span>)</div></div>
+      </div>
+    </section>
+
+    <!-- ============ STEP 9 ============ -->
+    <section class="step" id="step9">
+      <div class="step__head"><span class="step__num">09</span><h2>เชื่อม Backend กับ Frontend เข้าหากัน</h2></div>
+      <p class="step__sub">ขั้นสุดท้าย — ให้ backend ยอมรับ request จากโดเมนจริงของ Vercel เท่านั้น (กันเว็บอื่นแอบยิงมาแทนคุณ)</p>
+
+      <div class="why">
+        <b>ทำไมต้องย้อนมาแก้</b>
+        <p>ตอนขั้น 07 เราใส่ <span class="mono">FRONTEND_ORIGIN</span> เป็นค่า placeholder ไปก่อน เพราะตอนนั้นยังไม่มี URL ของ Vercel ตอนนี้มีแล้วต้องย้อนมาใส่ค่าจริง ไม่งั้นเว็บจะขึ้น error "CORS" ตอนพยายามล็อกอิน</p>
+      </div>
+
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">กลับไปที่ <span class="where">render.com</span> → คลิก service <span class="where">smart-home-backend</span></div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกแท็บ <span class="where">Environment</span> ด้านซ้าย</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">หาแถว <span class="where">FRONTEND_ORIGIN</span> → คลิกไอคอนดินสอ (Edit) → ลบ placeholder ออก แล้ววาง URL จริงจาก Vercel (ขั้น 08.4)</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิก <b>Save Changes</b> → Render จะ redeploy backend ให้อัตโนมัติ รอประมาณ 1 นาที</div></div>
+      </div>
+
+      <h3 class="sub">ทดสอบเว็บจริง</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เปิด URL ของ Vercel ในเบราว์เซอร์ (มือถือก็เปิดได้) → ควรเห็นหน้าล็อกอิน</div></div>
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">ใส่ username <span class="where">admin</span> และรหัสผ่านที่ตั้งไว้ในขั้น 07.3 → คลิก <b>เข้าสู่ระบบ</b></div></div>
+        <div class="action"><div class="action__icon">👀</div><div class="action__text">ถ้าเห็นข้อมูลบ้านและกราฟ (แม้จะว่างเพราะยังไม่มี ESP32 ส่งข้อมูล) แปลว่าเชื่อมสำเร็จครบวงจรแล้ว 🎉</div></div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>อาการ</th><th>สาเหตุ</th><th>วิธีแก้</th></tr></thead>
+          <tbody>
+            <tr><td>ล็อกอินแล้วขึ้น "Network Error" หรือ CORS error</td><td><span class="mono">FRONTEND_ORIGIN</span> ยังไม่ตรงกับ URL จริงของ Vercel</td><td>เช็คว่าคัดลอก URL มาถูกเป๊ะ (มี https:// และไม่มี / ต่อท้าย)</td></tr>
+            <tr><td>หน้าเว็บขึ้นแต่โหลดข้อมูลไม่ได้</td><td><span class="mono">VITE_API_URL</span> ผิด หรือยังไม่ redeploy หลังแก้</td><td>ใน Vercel: Settings → Environment Variables เช็คค่า แล้วกด Redeploy</td></tr>
+            <tr><td>ESP32 จริงส่งข้อมูลไม่ถึง</td><td>เฟิร์มแวร์ยังชี้ไป IP local อยู่</td><td>แก้ <span class="mono">SERVER_URL</span> ในไฟล์ ESP32 เป็น URL ของ Render + แก้ <span class="mono">DEVICE_API_KEY</span> ให้ตรงกับค่าที่ Render สุ่มให้ (ดูได้ในแท็บ Environment)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tip"><b>เสร็จสมบูรณ์</b>ตอนนี้ dashboard ของคุณออนไลน์ 24 ชั่วโมงแล้ว เข้าจากมือถือ/คอมเครื่องไหนก็ได้ผ่านลิงก์ Vercel — แชร์ให้คนอื่นดูได้เลย (ต้องล็อกอินก่อนเห็นข้อมูลเสมอ)</div>
     </section>
 
   </main>
