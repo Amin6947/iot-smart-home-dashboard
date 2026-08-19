@@ -1,0 +1,727 @@
+<title>สร้าง IoT Smart Home Dashboard — คู่มือทีละขั้นตอน</title>
+<style>
+  :root{
+    --bg:#F5F7F3; --bg-elevated:#FFFFFF; --bg-sunken:#EBEFE9;
+    --ink:#14231C; --ink-muted:#5B6E63; --ink-faint:#8A9A8F;
+    --accent:#A85F26; --accent-ink:#7A4A22; --accent-soft:#F0DCC4; --accent-line:#D99C5F;
+    --led:#2E7A9B; --led-soft:#DCEEF4;
+    --success:#2F7A4F; --success-soft:#DCEEE0;
+    --border:#D9DED7; --border-strong:#C3CBBF;
+    --code-bg:#12201A; --code-ink:#D7E4DA; --code-accent:#E3A76F; --code-muted:#7E9A8A; --code-border:#233A2E;
+    --radius-s:6px; --radius-m:10px;
+    --font-display:"Bahnschrift","Sansation","Segoe UI Semibold","Segoe UI",sans-serif;
+    --font-body:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --font-mono:"Cascadia Code","Cascadia Mono",ui-monospace,Consolas,"Courier New",monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0F1D17; --bg-elevated:#16281F; --bg-sunken:#0B1712;
+      --ink:#E8EDE7; --ink-muted:#93A99C; --ink-faint:#5E7468;
+      --accent:#E0995E; --accent-ink:#F0B27E; --accent-soft:rgba(224,153,94,.16); --accent-line:#E0995E;
+      --led:#72BEDD; --led-soft:rgba(114,190,221,.16);
+      --success:#6BC28C; --success-soft:rgba(107,194,140,.14);
+      --border:#22392D; --border-strong:#324F3F;
+      --code-border:#2A4436;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F1D17; --bg-elevated:#16281F; --bg-sunken:#0B1712;
+    --ink:#E8EDE7; --ink-muted:#93A99C; --ink-faint:#5E7468;
+    --accent:#E0995E; --accent-ink:#F0B27E; --accent-soft:rgba(224,153,94,.16); --accent-line:#E0995E;
+    --led:#72BEDD; --led-soft:rgba(114,190,221,.16);
+    --success:#6BC28C; --success-soft:rgba(107,194,140,.14);
+    --border:#22392D; --border-strong:#324F3F;
+    --code-border:#2A4436;
+  }
+  :root[data-theme="light"]{
+    --bg:#F5F7F3; --bg-elevated:#FFFFFF; --bg-sunken:#EBEFE9;
+    --ink:#14231C; --ink-muted:#5B6E63; --ink-faint:#8A9A8F;
+    --accent:#A85F26; --accent-ink:#7A4A22; --accent-soft:#F0DCC4; --accent-line:#D99C5F;
+    --led:#2E7A9B; --led-soft:#DCEEF4;
+    --success:#2F7A4F; --success-soft:#DCEEE0;
+    --border:#D9DED7; --border-strong:#C3CBBF;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); line-height:1.65;
+    font-size:16px; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:var(--font-display); text-wrap:balance; font-weight:700; letter-spacing:.01em; margin:0; }
+  code, .mono{ font-family:var(--font-mono); }
+  a{ color:var(--accent-ink); }
+  ::selection{ background:var(--accent-soft); }
+  :focus-visible{ outline:2px solid var(--led); outline-offset:2px; border-radius:3px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    padding:.7rem 1.5rem;
+    display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  }
+  .topbar__brand{ display:flex; align-items:center; gap:.55rem; font-family:var(--font-display); font-weight:700; font-size:.95rem; letter-spacing:.02em; }
+  .chip-dot{ width:9px; height:9px; border-radius:2px; background:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+  .topbar__meta{ font-size:.78rem; color:var(--ink-muted); font-family:var(--font-mono); }
+
+  /* ---------- Hero ---------- */
+  .hero{ max-width:920px; margin:0 auto; padding:3rem 1.5rem 2rem; }
+  .eyebrow{ font-family:var(--font-mono); font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); margin-bottom:.6rem; display:flex; align-items:center; gap:.5rem; }
+  .eyebrow::before{ content:""; width:22px; height:1px; background:var(--accent-line); display:inline-block; }
+  .hero h1{ font-size:clamp(1.7rem,4vw,2.5rem); line-height:1.15; }
+  .hero p{ color:var(--ink-muted); max-width:60ch; margin-top:.9rem; font-size:1.02rem; }
+  .hero-note{
+    margin-top:1.3rem; display:flex; gap:.7rem; align-items:flex-start;
+    background:var(--bg-elevated); border:1px solid var(--border); border-left:3px solid var(--led);
+    padding:.85rem 1rem; border-radius:var(--radius-s); font-size:.9rem; color:var(--ink-muted);
+    max-width:64ch;
+  }
+  .hero-note b{ color:var(--ink); }
+  .hero-note .mono{ background:var(--bg-sunken); padding:.1rem .35rem; border-radius:4px; font-size:.85em; }
+
+  /* ---------- Layout: rail + content ---------- */
+  .layout{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:220px 1fr; gap:2.5rem; padding:0 1.5rem 5rem; align-items:start; }
+  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+  .rail{ position:sticky; top:64px; padding-top:1rem; }
+  @media (max-width:900px){
+    .rail{ position:sticky; top:49px; display:flex; overflow-x:auto; gap:.4rem; padding:.8rem 0; background:var(--bg); z-index:15; border-bottom:1px solid var(--border); }
+  }
+  .rail__track{ position:relative; display:flex; flex-direction:column; gap:0; }
+  .rail__track::before{ content:""; position:absolute; left:11px; top:14px; bottom:14px; width:1px; background:var(--border-strong); }
+  @media (max-width:900px){ .rail__track{ flex-direction:row; } .rail__track::before{ display:none; } }
+
+  .rail a{
+    position:relative; display:flex; align-items:center; gap:.65rem;
+    text-decoration:none; color:var(--ink-muted); padding:.55rem 0 .55rem .0;
+    font-size:.86rem; transition:color .15s;
+  }
+  @media (max-width:900px){ .rail a{ padding:.3rem .6rem; white-space:nowrap; background:var(--bg-elevated); border:1px solid var(--border); border-radius:20px; } }
+  .rail a .pin{
+    flex:none; width:23px; height:23px; border-radius:4px; z-index:1;
+    background:var(--bg-elevated); border:1px solid var(--border-strong);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:.68rem; color:var(--ink-faint);
+  }
+  .rail a.active{ color:var(--ink); font-weight:600; }
+  .rail a.active .pin{ background:var(--accent); border-color:var(--accent); color:var(--bg-elevated); }
+  .rail a:hover{ color:var(--ink); }
+
+  /* ---------- Steps ---------- */
+  .step{ padding:2.6rem 0; border-bottom:1px solid var(--border); scroll-margin-top:70px; }
+  .step:last-child{ border-bottom:none; }
+  .step__head{ display:flex; gap:1rem; align-items:baseline; margin-bottom:.4rem; }
+  .step__num{ font-family:var(--font-display); font-size:2.1rem; color:var(--accent-ink); line-height:1; }
+  .step h2{ font-size:1.45rem; }
+  .step__sub{ color:var(--ink-muted); margin:.5rem 0 1.6rem; max-width:62ch; }
+
+  h3.sub{ font-family:var(--font-body); font-weight:700; font-size:1rem; margin:1.8rem 0 .8rem; color:var(--ink); }
+  p{ max-width:66ch; }
+
+  /* ---------- Why box ---------- */
+  .why{ background:var(--bg-sunken); border-left:3px solid var(--led); border-radius:var(--radius-s); padding:.9rem 1.1rem; margin:1rem 0 1.4rem; max-width:64ch; }
+  .why b{ font-family:var(--font-mono); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--led); display:block; margin-bottom:.35rem; }
+  .why p{ margin:0; font-size:.92rem; color:var(--ink-muted); }
+
+  /* ---------- Action cards (mouse pointer instructions) ---------- */
+  .actions{ display:flex; flex-direction:column; gap:.5rem; margin:0 0 1.6rem; max-width:66ch; }
+  .action{ display:flex; gap:.8rem; align-items:flex-start; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-s); padding:.65rem .9rem; }
+  .action__icon{ flex:none; width:30px; height:30px; border-radius:7px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-size:1rem; }
+  .action__text b{ color:var(--ink); }
+  .action__text{ font-size:.92rem; color:var(--ink-muted); }
+  .action__text .where{ font-family:var(--font-mono); background:var(--bg-sunken); padding:.05rem .35rem; border-radius:4px; color:var(--ink); font-size:.85em; }
+
+  /* ---------- Terminal window ---------- */
+  .term{ background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; margin:0 0 1.4rem; max-width:74ch; }
+  .term__bar{ display:flex; align-items:center; justify-content:space-between; padding:.5rem .8rem; border-bottom:1px solid var(--code-border); }
+  .term__title{ font-family:var(--font-mono); font-size:.72rem; color:var(--code-muted); letter-spacing:.03em; }
+  .term__ctrl{ display:flex; gap:5px; }
+  .term__ctrl span{ width:11px; height:11px; border:1px solid var(--code-border); border-radius:2px; display:inline-block; }
+  .term__body{ padding:.9rem 1rem 1.05rem; overflow-x:auto; }
+  .term pre{ margin:0; font-family:var(--font-mono); font-size:.84rem; color:var(--code-ink); line-height:1.7; white-space:pre; }
+  .term .prompt{ color:var(--code-accent); }
+  .term .cmt{ color:var(--code-muted); }
+
+  /* ---------- Editor window (file content) ---------- */
+  .editor{ background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-m); overflow:hidden; margin:0 0 1.4rem; max-width:74ch; }
+  .editor__tab{ display:flex; align-items:center; gap:.5rem; padding:.55rem .9rem; border-bottom:1px solid var(--code-border); font-family:var(--font-mono); font-size:.76rem; color:var(--code-ink); }
+  .editor__tab .dot{ width:7px; height:7px; border-radius:50%; background:var(--code-accent); }
+  .editor__body{ padding:.9rem 1rem 1.1rem; overflow-x:auto; max-height:480px; overflow-y:auto; }
+  .editor pre{ margin:0; font-family:var(--font-mono); font-size:.8rem; color:var(--code-ink); line-height:1.65; white-space:pre; }
+
+  /* ---------- Callouts ---------- */
+  .tip, .warn{ border-radius:var(--radius-s); padding:.85rem 1rem; margin:0 0 1.4rem; font-size:.9rem; max-width:64ch; }
+  .tip{ background:var(--success-soft); border:1px solid color-mix(in srgb, var(--success) 35%, transparent); color:var(--ink); }
+  .warn{ background:var(--accent-soft); border:1px solid color-mix(in srgb, var(--accent) 35%, transparent); color:var(--ink); }
+  .tip b, .warn b{ display:block; font-family:var(--font-mono); font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; margin-bottom:.3rem; }
+  .tip b{ color:var(--success); } .warn b{ color:var(--accent-ink); }
+
+  /* ---------- Table ---------- */
+  .tbl-wrap{ overflow-x:auto; max-width:74ch; margin:0 0 1.4rem; }
+  table{ border-collapse:collapse; width:100%; font-size:.88rem; }
+  th,td{ text-align:left; padding:.55rem .8rem; border-bottom:1px solid var(--border); }
+  th{ font-family:var(--font-mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); }
+  td .mono{ background:var(--bg-sunken); padding:.05rem .35rem; border-radius:4px; }
+
+  /* ---------- misc ---------- */
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; max-width:74ch; }
+  @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+  .badge{ display:inline-flex; align-items:center; gap:.4rem; font-family:var(--font-mono); font-size:.72rem; background:var(--led-soft); color:var(--led); padding:.25rem .6rem; border-radius:20px; margin-bottom:.8rem; }
+  footer{ max-width:920px; margin:0 auto; padding:2rem 1.5rem 4rem; color:var(--ink-faint); font-size:.82rem; }
+
+  @media (prefers-reduced-motion: reduce){ *{ scroll-behavior:auto !important; transition:none !important; animation:none !important; } }
+  html{ scroll-behavior:smooth; }
+</style>
+
+<div class="topbar">
+  <div class="topbar__brand"><span class="chip-dot"></span> IoT Smart Home Dashboard</div>
+  <div class="topbar__meta">คู่มือฉบับ Windows · PowerShell + VS Code</div>
+</div>
+
+<div class="hero">
+  <div class="eyebrow">คู่มือทีละขั้นตอน</div>
+  <h1>สร้าง IoT Smart Home Dashboard ตั้งแต่ศูนย์</h1>
+  <p>เดินตามทีละคลิก ทีละคำสั่ง — ตั้งแต่สร้างโฟลเดอร์ ไปจนถึง Backend (FastAPI), Frontend (React + Tailwind) และเฟิร์มแวร์ ESP32 (MicroPython) ที่คุยกันได้จริงทั้งระบบ</p>
+  <div class="hero-note">
+    <span>📁</span>
+    <span><b>โปรเจกต์นี้สร้างไว้ให้แล้ว</b> ที่ <span class="mono">C:\Users\VICTUS\Desktop\A03</span> คู่มือนี้อธิบายทุกขั้นตอนแบบเดียวกับที่ใช้สร้างจริง — เดินตามเพื่อเข้าใจ หรือข้ามไปขั้นที่ 5 เพื่อรันของที่มีอยู่แล้วได้เลย</span>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="rail">
+    <div class="rail__track" id="railTrack">
+      <a href="#step1"><span class="pin">01</span>สร้างโฟลเดอร์</a>
+      <a href="#step2"><span class="pin">02</span>Backend FastAPI</a>
+      <a href="#step3"><span class="pin">03</span>Frontend React</a>
+      <a href="#step4"><span class="pin">04</span>ESP32 MicroPython</a>
+      <a href="#step5"><span class="pin">05</span>ทดสอบ + รันเต็ม</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ============ STEP 1 ============ -->
+    <section class="step" id="step1">
+      <div class="step__head"><span class="step__num">01</span><h2>สร้างโฟลเดอร์โปรเจกต์</h2></div>
+      <p class="step__sub">ก่อนเขียนโค้ดสักบรรทัด ต้องมี "บ้าน" ให้ไฟล์ทั้งหมดอยู่ก่อน — โฟลเดอร์หลักเดียว ที่ข้างในแบ่งเป็น backend / frontend / firmware ชัดเจน</p>
+
+      <div class="why">
+        <b>ทำไม</b>
+        <p>แยกโฟลเดอร์ตามหน้าที่ (backend ≠ frontend ≠ firmware) เพราะแต่ละส่วนใช้ภาษาและเครื่องมือคนละชุด (Python vs JavaScript vs MicroPython) การแยกชัดเจนตั้งแต่แรกทำให้ npm install หรือ pip install ของฝั่งหนึ่งไม่ไปปนกับอีกฝั่ง</p>
+      </div>
+
+      <h3 class="sub">วิธีที่ 1 — ใช้เมาส์ผ่าน File Explorer</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text"><b>คลิกขวา</b> บนพื้นที่ว่างของ <span class="where">Desktop</span> — เมนูบริบทจะเด้งขึ้นมา</div></div>
+        <div class="action"><div class="action__icon">👆</div><div class="action__text">เลื่อนเมาส์ไปชี้ที่ <b>New</b> (ใหม่) — เมนูย่อยจะกางออกทางขวา</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกซ้ายที่ <b>Folder</b> (โฟลเดอร์) — ไอคอนโฟลเดอร์ใหม่จะปรากฏพร้อมช่องพิมพ์ชื่อ</div></div>
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">พิมพ์ชื่อ <span class="where">A03</span> แล้วกด <b>Enter</b></div></div>
+      </div>
+
+      <h3 class="sub">วิธีที่ 2 — ใช้ Terminal (แนะนำ เร็วกว่า)</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">กดปุ่ม <b>Win</b> บนคีย์บอร์ด พิมพ์ <span class="where">PowerShell</span> แล้วกด Enter เพื่อเปิด Terminal</div></div>
+      </div>
+      <div class="term">
+        <div class="term__bar"><span class="term__title">PowerShell</span><div class="term__ctrl"><span></span><span></span><span></span></div></div>
+        <div class="term__body"><pre><span class="prompt">PS C:\Users\VICTUS&gt;</span> cd Desktop
+<span class="prompt">PS C:\Users\VICTUS\Desktop&gt;</span> mkdir A03
+<span class="prompt">PS C:\Users\VICTUS\Desktop&gt;</span> cd A03
+<span class="prompt">PS C:\Users\VICTUS\Desktop\A03&gt;</span> mkdir backend, frontend, firmware
+<span class="cmt"># สร้าง 3 โฟลเดอร์ย่อยพร้อมกันในคำสั่งเดียว</span></pre></div>
+      </div>
+
+      <div class="tip"><b>เคล็ดลับ</b>ถ้าอยู่ใน File Explorer แล้วต้องการเปิด Terminal ตรงจุดนั้นทันที: <b>🖱️ คลิกขวา</b> ในพื้นที่ว่างของโฟลเดอร์ → เลือก <span class="where">Open in Terminal</span> ได้เลย ไม่ต้อง cd เอง</div>
+    </section>
+
+    <!-- ============ STEP 2 ============ -->
+    <section class="step" id="step2">
+      <div class="step__head"><span class="step__num">02</span><h2>Backend — FastAPI + SQLite</h2></div>
+      <p class="step__sub">หัวใจของระบบ: รับข้อมูลจาก ESP32, เก็บลง SQLite, และส่งให้ frontend แสดงผล</p>
+
+      <div class="why">
+        <b>ทำไม FastAPI</b>
+        <p>เขียน endpoint ได้กระชับด้วย Python type hints, สร้างเอกสาร API (Swagger) ให้อัตโนมัติที่ <span class="mono">/docs</span>, และเร็วพอสำหรับรับข้อมูลจากอุปกรณ์ IoT หลายตัวพร้อมกัน</p>
+      </div>
+
+      <h3 class="sub">2.1 เปิดโฟลเดอร์ใน VS Code</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เปิด <b>Visual Studio Code</b> (ดับเบิลคลิกไอคอนบน Desktop หรือ taskbar)</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกเมนู <span class="where">File</span> (บนซ้ายสุด) → คลิก <span class="where">Open Folder...</span></div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เลือกโฟลเดอร์ <span class="where">A03</span> ในหน้าต่างที่เปิดขึ้น → คลิกปุ่ม <b>Select Folder</b> มุมขวาล่าง</div></div>
+      </div>
+
+      <h3 class="sub">2.2 สร้างไฟล์ในโฟลเดอร์ backend</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">👆</div><div class="action__text">ใน <b>Explorer</b> แถบซ้ายมือ ชี้เมาส์ไปที่โฟลเดอร์ <span class="where">backend</span> จนเห็นไอคอนเล็ก ๆ โผล่ทางขวา</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกไอคอน <b>New File</b> (รูปหน้ากระดาษมี +) ที่โผล่ขึ้นมาข้างชื่อโฟลเดอร์</div></div>
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">พิมพ์ชื่อไฟล์ เช่น <span class="where">requirements.txt</span> แล้วกด Enter — ไฟล์ว่างจะเปิดขึ้นในแท็บกลางจอ</div></div>
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">วางโค้ด (Ctrl+V) ที่ก็อปมาจากด้านล่าง แล้วกด <b>Ctrl+S</b> เพื่อบันทึก</div></div>
+      </div>
+      <p>ทำซ้ำขั้นตอนนี้ทีละไฟล์: <span class="mono">database.py</span>, <span class="mono">models.py</span>, <span class="mono">schemas.py</span>, <span class="mono">main.py</span></p>
+
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>backend/requirements.txt</div>
+        <div class="editor__body"><pre>fastapi==0.111.0
+uvicorn[standard]==0.30.1
+sqlalchemy==2.0.30
+pydantic==2.7.1</pre></div></div>
+
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>backend/database.py</div>
+        <div class="editor__body"><pre>from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+SQLALCHEMY_DATABASE_URL = "sqlite:///./smart_home.db"
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()</pre></div></div>
+
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>backend/models.py</div>
+        <div class="editor__body"><pre>from datetime import datetime
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from database import Base
+
+class House(Base):
+    __tablename__ = "houses"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    location = Column(String, default="")
+    devices = relationship("Device", back_populates="house", cascade="all, delete-orphan")
+
+class Device(Base):
+    __tablename__ = "devices"
+    id = Column(Integer, primary_key=True, index=True)
+    house_id = Column(Integer, ForeignKey("houses.id"), nullable=False)
+    name = Column(String, nullable=False)
+    type = Column(String, nullable=False)   # "led" | "temperature" | "brightness"
+    state = Column(Boolean, default=False)
+    house = relationship("House", back_populates="devices")
+    telemetry = relationship("Telemetry", back_populates="device", cascade="all, delete-orphan")
+
+class Telemetry(Base):
+    __tablename__ = "telemetry"
+    id = Column(Integer, primary_key=True, index=True)
+    device_id = Column(Integer, ForeignKey("devices.id"), nullable=False)
+    value = Column(Float, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    device = relationship("Device", back_populates="telemetry")</pre></div></div>
+
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>backend/schemas.py</div>
+        <div class="editor__body"><pre>from datetime import datetime
+from typing import List
+from pydantic import BaseModel
+
+class TelemetryIn(BaseModel):
+    device_id: int
+    value: float
+
+class TelemetryOut(BaseModel):
+    id: int
+    device_id: int
+    value: float
+    timestamp: datetime
+    class Config: from_attributes = True
+
+class DeviceOut(BaseModel):
+    id: int; name: str; type: str; state: bool
+    class Config: from_attributes = True
+
+class DeviceStateIn(BaseModel):
+    state: bool
+
+class HouseOut(BaseModel):
+    id: int; name: str; location: str
+    devices: List[DeviceOut] = []
+    class Config: from_attributes = True</pre></div></div>
+
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>backend/main.py</div>
+        <div class="editor__body"><pre>from datetime import datetime
+from typing import List
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+import models, schemas
+from database import engine, get_db, SessionLocal
+
+models.Base.metadata.create_all(bind=engine)
+app = FastAPI(title="Smart Home Dashboard API")
+app.add_middleware(CORSMiddleware, allow_origins=["*"],
+    allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+@app.on_event("startup")
+def seed_data():
+    db = SessionLocal()
+    try:
+        if db.query(models.House).count() > 0: return
+        h1 = models.House(name="บ้านหลังใหญ่", location="กรุงเทพฯ")
+        h2 = models.House(name="บ้านต่างจังหวัด", location="เชียงใหม่")
+        db.add_all([h1, h2]); db.flush()
+        db.add_all([
+            models.Device(house_id=h1.id, name="ไฟห้องนั่งเล่น", type="led", state=False),
+            models.Device(house_id=h1.id, name="เซนเซอร์อุณหภูมิ", type="temperature"),
+            models.Device(house_id=h1.id, name="เซนเซอร์ความสว่าง", type="brightness"),
+            models.Device(house_id=h2.id, name="ไฟหน้าบ้าน", type="led", state=True),
+            models.Device(house_id=h2.id, name="เซนเซอร์อุณหภูมิ", type="temperature"),
+        ])
+        db.commit()
+    finally: db.close()
+
+@app.post("/api/device/telemetry", response_model=schemas.TelemetryOut)
+def receive_telemetry(payload: schemas.TelemetryIn, db: Session = Depends(get_db)):
+    device = db.query(models.Device).filter(models.Device.id == payload.device_id).first()
+    if not device: raise HTTPException(404, "ไม่พบอุปกรณ์")
+    record = models.Telemetry(device_id=payload.device_id, value=payload.value, timestamp=datetime.utcnow())
+    db.add(record); db.commit(); db.refresh(record)
+    return record
+
+@app.get("/api/houses", response_model=List[schemas.HouseOut])
+def list_houses(db: Session = Depends(get_db)):
+    return db.query(models.House).all()
+
+@app.get("/api/devices/{device_id}/telemetry", response_model=List[schemas.TelemetryOut])
+def device_telemetry(device_id: int, limit: int = 20, db: Session = Depends(get_db)):
+    rows = (db.query(models.Telemetry).filter(models.Telemetry.device_id == device_id)
+            .order_by(models.Telemetry.timestamp.desc()).limit(limit).all())
+    return list(reversed(rows))
+
+@app.post("/api/devices/{device_id}/state", response_model=schemas.DeviceOut)
+def set_device_state(device_id: int, payload: schemas.DeviceStateIn, db: Session = Depends(get_db)):
+    device = db.query(models.Device).filter(models.Device.id == device_id).first()
+    if not device: raise HTTPException(404, "ไม่พบอุปกรณ์")
+    device.state = payload.state; db.commit(); db.refresh(device)
+    return device</pre></div></div>
+
+      <h3 class="sub">2.3 ติดตั้งไลบรารีและรัน server</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">ในแถบเมนูบนสุดของ VS Code คลิก <span class="where">Terminal</span> → คลิก <span class="where">New Terminal</span> (หรือกด <b>Ctrl+`</b>)</div></div>
+      </div>
+      <div class="term">
+        <div class="term__bar"><span class="term__title">PowerShell — backend</span><div class="term__ctrl"><span></span><span></span><span></span></div></div>
+        <div class="term__body"><pre><span class="prompt">PS ...\A03&gt;</span> cd backend
+<span class="prompt">PS ...\A03\backend&gt;</span> python -m venv venv
+<span class="cmt"># สร้างสภาพแวดล้อม Python แยกเฉพาะโปรเจกต์นี้</span>
+<span class="prompt">PS ...\A03\backend&gt;</span> venv\Scripts\Activate.ps1
+<span class="cmt"># จะเห็น (venv) ขึ้นหน้า prompt แปลว่าเปิดใช้งานสำเร็จ</span>
+<span class="prompt">(venv) PS ...\A03\backend&gt;</span> pip install -r requirements.txt
+<span class="prompt">(venv) PS ...\A03\backend&gt;</span> uvicorn main:app --reload --port 8000
+<span class="cmt"># เห็นบรรทัด "Uvicorn running on http://0.0.0.0:8000" แปลว่าสำเร็จ</span></pre></div>
+      </div>
+      <div class="warn"><b>ข้อควรระวัง</b>ต้อง <b>เปิด terminal นี้ค้างไว้เสมอ</b> ห้ามปิด — ถ้าปิดหน้าต่างนี้ backend จะหยุดทำงานทันที ให้เปิด terminal ใหม่แยกสำหรับขั้นตอนถัดไป</div>
+    </section>
+
+    <!-- ============ STEP 3 ============ -->
+    <section class="step" id="step3">
+      <div class="step__head"><span class="step__num">03</span><h2>Frontend — React + Tailwind</h2></div>
+      <p class="step__sub">Dashboard ที่แสดงบ้าน อุปกรณ์ กราฟ real-time และปุ่มเปิด-ปิด</p>
+
+      <div class="why">
+        <b>ทำไม Vite</b>
+        <p>เร็วกว่า Create-React-App มาก (hot reload แทบจะทันที) และเป็นเครื่องมือมาตรฐานที่ทีม React ส่วนใหญ่ใช้ตอนนี้</p>
+      </div>
+
+      <h3 class="sub">3.1 สร้างโปรเจกต์ React ด้วย Vite</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เปิด terminal ใหม่: คลิกไอคอน <b>+</b> ที่มุมขวาบนของแถบ terminal ใน VS Code</div></div>
+      </div>
+      <div class="term">
+        <div class="term__bar"><span class="term__title">PowerShell — frontend</span><div class="term__ctrl"><span></span><span></span><span></span></div></div>
+        <div class="term__body"><pre><span class="prompt">PS ...\A03&gt;</span> npm create vite@latest frontend -- --template react
+<span class="cmt"># ถ้าไม่ใส่ --template คำสั่งจะถามแบบโต้ตอบ:
+#   ? Select a framework:  ใช้ปุ่มลูกศร ↓ เลื่อนไปที่ "React" กด Enter
+#   ? Select a variant:    เลื่อนไปที่ "JavaScript" กด Enter</span>
+<span class="prompt">PS ...\A03&gt;</span> cd frontend
+<span class="prompt">PS ...\A03\frontend&gt;</span> npm install
+<span class="prompt">PS ...\A03\frontend&gt;</span> npm install -D tailwindcss postcss autoprefixer
+<span class="prompt">PS ...\A03\frontend&gt;</span> npx tailwindcss init -p
+<span class="prompt">PS ...\A03\frontend&gt;</span> npm install recharts
+<span class="cmt"># recharts = ไลบรารีวาดกราฟ real-time</span></pre></div>
+      </div>
+
+      <h3 class="sub">3.2 ตั้งค่า Tailwind</h3>
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>frontend/tailwind.config.js</div>
+        <div class="editor__body"><pre>/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,jsx}"],
+  theme: { extend: {} },
+  plugins: [],
+}</pre></div></div>
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>frontend/src/index.css</div>
+        <div class="editor__body"><pre>@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply bg-slate-100 text-slate-800; }</pre></div></div>
+
+      <h3 class="sub">3.3 สร้างไฟล์ src/api.js — เลเยอร์เรียก API</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">ใน Explorer คลิกโฟลเดอร์ <span class="where">frontend/src</span> → คลิกไอคอน <b>New File</b> → พิมพ์ <span class="where">api.js</span></div></div>
+      </div>
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>frontend/src/api.js</div>
+        <div class="editor__body"><pre>const BASE = '/api'
+
+export async function getHouses() {
+  const res = await fetch(`${BASE}/houses`)
+  if (!res.ok) throw new Error('โหลดข้อมูลบ้านไม่สำเร็จ')
+  return res.json()
+}
+
+export async function getTelemetry(deviceId, limit = 20) {
+  const res = await fetch(`${BASE}/devices/${deviceId}/telemetry?limit=${limit}`)
+  if (!res.ok) throw new Error('โหลดข้อมูล telemetry ไม่สำเร็จ')
+  return res.json()
+}
+
+export async function setDeviceState(deviceId, state) {
+  const res = await fetch(`${BASE}/devices/${deviceId}/state`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ state }),
+  })
+  if (!res.ok) throw new Error('สั่งงานอุปกรณ์ไม่สำเร็จ')
+  return res.json()
+}</pre></div></div>
+
+      <h3 class="sub">3.4 สร้างโฟลเดอร์ components และไฟล์กราฟ</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">👆</div><div class="action__text">ชี้เมาส์ที่ <span class="where">frontend/src</span> → คลิกไอคอน <b>New Folder</b> (ไอคอนที่สองถัดจาก New File) → พิมพ์ <span class="where">components</span></div></div>
+      </div>
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>frontend/src/components/TelemetryChart.jsx</div>
+        <div class="editor__body"><pre>import { useEffect, useState } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { getTelemetry } from '../api'
+
+export default function TelemetryChart({ deviceId, color = '#2563eb', unit = '' }) {
+  const [data, setData] = useState([])
+
+  useEffect(() => {
+    let active = true
+    async function load() {
+      const rows = await getTelemetry(deviceId, 20)
+      if (!active) return
+      setData(rows.map((r) => ({
+        time: new Date(r.timestamp + 'Z').toLocaleTimeString('th-TH'),
+        value: r.value,
+      })))
+    }
+    load()
+    const id = setInterval(load, 5000)  // อัพเดททุก 5 วินาที
+    return () => { active = false; clearInterval(id) }
+  }, [deviceId])
+
+  if (data.length === 0) return <p className="text-sm text-slate-400 py-8 text-center">ยังไม่มีข้อมูล...</p>
+
+  return (
+    <ResponsiveContainer width="100%" height={160}>
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <XAxis dataKey="time" tick={{ fontSize: 10 }} />
+        <YAxis tick={{ fontSize: 10 }} unit={unit} />
+        <Tooltip />
+        <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} dot={false} isAnimationActive={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}</pre></div></div>
+
+      <p>ทำแบบเดียวกันสำหรับ <span class="mono">DeviceCard.jsx</span> (ปุ่มเปิด-ปิด + แสดงกราฟ), <span class="mono">HouseCard.jsx</span> (จัดกลุ่มอุปกรณ์ตามบ้าน) และ <span class="mono">App.jsx</span> (โครงหน้าหลัก) — โค้ดฉบับเต็มอยู่ในโปรเจกต์จริงที่ <span class="mono">frontend/src/</span></p>
+
+      <h3 class="sub">3.5 รัน dev server</h3>
+      <div class="term">
+        <div class="term__bar"><span class="term__title">PowerShell — frontend</span><div class="term__ctrl"><span></span><span></span><span></span></div></div>
+        <div class="term__body"><pre><span class="prompt">PS ...\A03\frontend&gt;</span> npm run dev
+<span class="cmt"># จะเห็น  ➜  Local:   http://localhost:5173/</span></pre></div>
+      </div>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text"><b>Ctrl + คลิก</b> ที่ลิงก์ <span class="where">http://localhost:5173</span> ใน terminal เพื่อเปิดเบราว์เซอร์ทันที</div></div>
+      </div>
+    </section>
+
+    <!-- ============ STEP 4 ============ -->
+    <section class="step" id="step4">
+      <div class="step__head"><span class="step__num">04</span><h2>ESP32 — เฟิร์มแวร์ MicroPython</h2></div>
+      <p class="step__sub">ให้บอร์ด ESP32 อ่านค่าเซนเซอร์แล้วยิงข้อมูลเข้า backend ทุก 5 วินาที</p>
+
+      <div class="why">
+        <b>ทำไม MicroPython</b>
+        <p>เขียนและแก้โค้ดได้เร็วกว่า C++/Arduino มาก เหมาะกับการทดลองและปรับจูนระหว่างพัฒนา ต่อ WiFi และยิง HTTP request ได้ในไม่กี่บรรทัด</p>
+      </div>
+
+      <h3 class="sub">4.1 ติดตั้ง Thonny IDE (โปรแกรมเขียน/อัพโหลดโค้ดลงบอร์ด)</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">ดาวน์โหลดจาก thonny.org → ดับเบิลคลิกไฟล์ติดตั้งที่ดาวน์โหลดมา</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิก <b>Next</b> ไปเรื่อย ๆ ในหน้าต่างติดตั้ง → คลิก <b>Install</b> → คลิก <b>Finish</b></div></div>
+      </div>
+
+      <h3 class="sub">4.2 แฟลช MicroPython ลงบอร์ด ESP32</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🔌</div><div class="action__text">เสียบสาย USB จาก ESP32 เข้าคอมพิวเตอร์</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เปิด Thonny → มุมขวาล่างของหน้าต่าง คลิกที่ชื่อ interpreter (เช่น "Python 3.x")</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เลือก <span class="where">MicroPython (ESP32)</span> จากรายการที่เด้งขึ้น</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกลิงก์ <span class="where">Install or update firmware</span> ที่ปรากฏด้านล่างรายการ</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เลือกพอร์ต COM ของบอร์ด → คลิกปุ่ม <b>Install</b> → รอแถบโหลดจนเต็ม → คลิก <b>Close</b></div></div>
+      </div>
+
+      <h3 class="sub">4.3 เขียนโค้ดและอัพโหลดเป็น main.py</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">ใน Thonny คลิกเมนู <span class="where">File</span> → <span class="where">New</span></div></div>
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">วางโค้ดด้านล่าง แล้วแก้ 3 บรรทัด: <span class="where">WIFI_SSID</span>, <span class="where">WIFI_PASS</span>, <span class="where">SERVER_URL</span> (ใส่ IP เครื่องที่รัน backend)</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกเมนู <span class="where">File</span> → <span class="where">Save As...</span></div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกปุ่ม <span class="where">MicroPython device</span> ในกล่องโต้ตอบที่เด้งขึ้น (ไม่ใช่ "This computer")</div></div>
+        <div class="action"><div class="action__icon">⌨️</div><div class="action__text">พิมพ์ชื่อไฟล์ <span class="where">main.py</span> แล้วคลิก <b>OK</b> — ต้องชื่อนี้เท่านั้น บอร์ดจะรันไฟล์นี้อัตโนมัติทุกครั้งที่เปิดเครื่อง</div></div>
+        <div class="action"><div class="action__icon">▶️</div><div class="action__text">คลิกปุ่มสามเหลี่ยมสีเขียว <b>Run</b> (หรือกด F5) เพื่อทดสอบทันทีโดยไม่ต้องรีบูตบอร์ด</div></div>
+      </div>
+
+      <div class="editor"><div class="editor__tab"><span class="dot"></span>firmware/main.py</div>
+        <div class="editor__body"><pre>import network, urequests, ujson, time
+
+WIFI_SSID = "YOUR_WIFI_NAME"
+WIFI_PASS = "YOUR_WIFI_PASSWORD"
+SERVER_URL = "http://192.168.1.100:8000/api/device/telemetry"
+
+TEMP_DEVICE_ID = 2        # id ของเซนเซอร์อุณหภูมิใน DB
+BRIGHTNESS_DEVICE_ID = 3  # id ของเซนเซอร์ความสว่างใน DB
+SEND_INTERVAL = 5         # วินาที
+
+def connect_wifi():
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    if not wlan.isconnected():
+        wlan.connect(WIFI_SSID, WIFI_PASS)
+        while not wlan.isconnected():
+            time.sleep(0.5)
+    print("เชื่อมต่อแล้ว:", wlan.ifconfig()[0])
+
+def read_temperature():
+    import urandom
+    return 25 + (urandom.getrandbits(8) / 255.0) * 10  # แทนที่ด้วยเซนเซอร์จริง เช่น DHT22
+
+def read_brightness():
+    import urandom
+    return urandom.getrandbits(10)  # แทนที่ด้วย ADC จาก LDR จริง
+
+def send_telemetry(device_id, value):
+    payload = ujson.dumps({"device_id": device_id, "value": value})
+    try:
+        res = urequests.post(SERVER_URL, data=payload,
+                              headers={"Content-Type": "application/json"})
+        print("ส่ง:", payload, "-> HTTP", res.status_code)
+        res.close()
+    except Exception as e:
+        print("ส่งไม่สำเร็จ:", e)
+
+def main():
+    connect_wifi()
+    while True:
+        send_telemetry(TEMP_DEVICE_ID, round(read_temperature(), 2))
+        send_telemetry(BRIGHTNESS_DEVICE_ID, read_brightness())
+        time.sleep(SEND_INTERVAL)
+
+main()</pre></div></div>
+
+      <div class="tip"><b>ไม่มีบอร์ด ESP32?</b>ใช้ <span class="mono">firmware/simulator.py</span> รันบนพีซีแทนได้ทันที — ดูขั้นตอนที่ 05</div>
+    </section>
+
+    <!-- ============ STEP 5 ============ -->
+    <section class="step" id="step5">
+      <div class="step__head"><span class="step__num">05</span><h2>ทดสอบ + รันเต็มระบบ</h2></div>
+      <p class="step__sub">เปิด 3 terminal พร้อมกัน แล้วดูข้อมูลไหลจาก ESP32 → backend → frontend แบบ real-time</p>
+
+      <div class="why">
+        <b>ทำไมต้อง 3 terminal</b>
+        <p>backend, simulator/ESP32 และ frontend เป็นโปรเซสที่ต้อง <b>ทำงานค้างพร้อมกันตลอดเวลา</b> — ปิด terminal ไหนเท่ากับหยุดส่วนนั้นทันที การแยกแต่ละแท็บทำให้เห็น log ของแต่ละส่วนแยกกันชัดเจน</p>
+      </div>
+
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">ใน VS Code คลิกไอคอน <b>Split Terminal</b> (สี่เหลี่ยมแยกสอง) หรือ <b>+</b> เพื่อเปิดแท็บ terminal ใหม่ ทำซ้ำจนได้ 3 แท็บ</div></div>
+      </div>
+
+      <div class="grid2">
+        <div class="term">
+          <div class="term__bar"><span class="term__title">Terminal 1 — backend</span><div class="term__ctrl"><span></span><span></span><span></span></div></div>
+          <div class="term__body"><pre><span class="prompt">(venv) PS ...\backend&gt;</span> uvicorn main:app --reload --port 8000</pre></div>
+        </div>
+        <div class="term">
+          <div class="term__bar"><span class="term__title">Terminal 2 — simulator</span><div class="term__ctrl"><span></span><span></span><span></span></div></div>
+          <div class="term__body"><pre><span class="prompt">PS ...\A03&gt;</span> pip install requests
+<span class="prompt">PS ...\A03&gt;</span> python firmware/simulator.py
+<span class="cmt"># ส่งข้อมูลจำลองแทน ESP32 ทุก 5 วิ</span></pre></div>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term__bar"><span class="term__title">Terminal 3 — frontend</span><div class="term__ctrl"><span></span><span></span><span></span></div></div>
+        <div class="term__body"><pre><span class="prompt">PS ...\A03\frontend&gt;</span> npm run dev</pre></div>
+      </div>
+
+      <h3 class="sub">5.1 เปิด Dashboard ในเบราว์เซอร์</h3>
+      <div class="actions">
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">เปิดเบราว์เซอร์ (เช่น Edge/Chrome) → คลิกที่ address bar ด้านบน → พิมพ์ <span class="where">http://localhost:5173</span> → กด Enter</div></div>
+        <div class="action"><div class="action__icon">🖱️</div><div class="action__text">คลิกปุ่ม toggle สีเทา/เขียวข้างอุปกรณ์ LED เพื่อเปิด-ปิด — สถานะจะเปลี่ยนทันทีและบันทึกลง database</div></div>
+        <div class="action"><div class="action__icon">👀</div><div class="action__text">รอ 5 วินาที กราฟเส้นของเซนเซอร์อุณหภูมิ/ความสว่างจะขยับตามข้อมูลใหม่จาก simulator</div></div>
+      </div>
+
+      <h3 class="sub">5.2 ทดสอบ API ด้วย curl</h3>
+      <div class="term">
+        <div class="term__bar"><span class="term__title">Terminal 4 — ทดสอบ (เปิดเพิ่ม)</span><div class="term__ctrl"><span></span><span></span><span></span></div></div>
+        <div class="term__body"><pre><span class="cmt"># ส่งข้อมูล telemetry ให้ device id=2</span>
+<span class="prompt">PS&gt;</span> curl.exe -X POST http://localhost:8000/api/device/telemetry `
+  -H "Content-Type: application/json" `
+  -d "{\"device_id\": 2, \"value\": 28.5}"
+
+<span class="cmt"># ดูรายชื่อบ้านทั้งหมด</span>
+<span class="prompt">PS&gt;</span> curl.exe http://localhost:8000/api/houses
+
+<span class="cmt"># เปิด LED (device id=1)</span>
+<span class="prompt">PS&gt;</span> curl.exe -X POST http://localhost:8000/api/devices/1/state `
+  -H "Content-Type: application/json" -d "{\"state\": true}"</pre></div>
+      </div>
+      <div class="tip"><b>ทางลัด</b>เปิดเอกสาร API แบบโต้ตอบได้ที่ <span class="mono">http://localhost:8000/docs</span> — คลิกปุ่ม <span class="where">Try it out</span> ที่ endpoint ไหนก็ได้เพื่อยิงทดสอบผ่านเบราว์เซอร์โดยไม่ต้องพิมพ์ curl เลย</div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>อาการ</th><th>สาเหตุที่พบบ่อย</th><th>วิธีแก้</th></tr></thead>
+          <tbody>
+            <tr><td>Dashboard ขึ้น "โหลดข้อมูลบ้านไม่สำเร็จ"</td><td>ลืมรัน backend หรือปิด terminal ไปแล้ว</td><td>เช็ค Terminal 1 ว่ายังมีบรรทัด <span class="mono">Uvicorn running</span> อยู่</td></tr>
+            <tr><td><span class="mono">ModuleNotFoundError</span></td><td>ยังไม่ activate venv หรือยังไม่ pip install</td><td>รัน <span class="mono">venv\Scripts\Activate.ps1</span> แล้ว <span class="mono">pip install -r requirements.txt</span> ใหม่</td></tr>
+            <tr><td>พอร์ต 8000 ใช้งานไม่ได้</td><td>มีโปรเซสอื่นจับพอร์ตค้างอยู่</td><td>เปลี่ยนเป็น <span class="mono">--port 8001</span> แล้วแก้ <span class="mono">vite.config.js</span> ให้ตรงกัน</td></tr>
+            <tr><td>ESP32 ส่งข้อมูลไม่ถึง backend</td><td>ใช้ <span class="mono">localhost</span> แทน IP เครื่อง</td><td>เปลี่ยน <span class="mono">SERVER_URL</span> เป็น IP จริงของเครื่อง (เช็คด้วย <span class="mono">ipconfig</span>)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>IoT Smart Home Dashboard — FastAPI · React + Tailwind · ESP32 MicroPython</footer>
+
+<script>
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+    var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+    if (!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          var id = '#' + entry.target.id;
+          links.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href') === id); });
+        }
+      });
+    }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+    sections.forEach(function(s){ if (s) io.observe(s); });
+  })();
+</script>

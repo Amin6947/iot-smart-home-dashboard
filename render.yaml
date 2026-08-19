@@ -1,0 +1,32 @@
+# Render Blueprint — deploy backend + Postgres ด้วยคลิกเดียว
+# วิธีใช้: เชื่อม repo นี้กับ Render แล้วเลือก "New +" -> "Blueprint"
+# Render จะอ่านไฟล์นี้แล้วสร้าง web service + database ให้อัตโนมัติ
+services:
+  - type: web
+    name: smart-home-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true          # Render สุ่มค่าให้อัตโนมัติ
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false                  # ต้องไปตั้งเองใน Render dashboard (ห้าม commit ลง git)
+      - key: DEVICE_API_KEY
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        sync: false                  # ใส่ URL จริงของ frontend หลัง deploy Vercel เสร็จ
+      - key: DATABASE_URL
+        fromDatabase:
+          name: smart-home-db
+          property: connectionString
+
+databases:
+  - name: smart-home-db
+    plan: free
+    databaseName: smart_home
+    user: smart_home
